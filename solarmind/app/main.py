@@ -6,6 +6,9 @@ import traceback
 import paho.mqtt.client as mqtt
 import requests
 
+from config import load_config
+
+
 VERSION = "1.0.1-beta"
 HA_TEST_ENTITY = "sensor.sun_solar_azimuth"
 
@@ -150,12 +153,12 @@ def main():
         log("BOOT - SolarMind add-on starting")
         log(f"VERSION - {VERSION}")
 
-        options = load_options()
+        config = load_config()
 
-        mqtt_host = options.get("mqtt_host", "core-mosquitto")
-        mqtt_port = int(options.get("mqtt_port", 1883))
-        mqtt_username = options.get("mqtt_username", "ha-mqtt")
-        mqtt_password = options.get("mqtt_password", "9jjiVawEV5ZjvV8")
+        mqtt_host = config.mqtt_host
+        mqtt_port = config.mqtt_port
+        mqtt_username = config.mqtt_username
+        mqtt_password = config.mqtt_password
 
         client = mqtt.Client(
             mqtt.CallbackAPIVersion.VERSION2,
