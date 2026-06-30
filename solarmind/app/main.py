@@ -188,11 +188,23 @@ def main():
 
             try:
                 publish_ha_test_value(client, runtime)
+                publish_sensor(
+                    client,
+                    "sun_azimuth",
+                    "Sun Azimuth",
+                    runtime.sun.azimuth,
+                    icon="mdi:compass",
+                    unit="°",
+                    attributes={
+                    "version": VERSION,
+                    "source_entity": HA_TEST_ENTITY,
+                    },
+        )
             except Exception as error:
                 runtime.system.errors.append(f"HA API test failed: {error}")
                 log(f"ERROR - HA API test failed: {error}")
 
-            publish_bootstrap_sensors(client, runtime.system.errors)
+            publish_bootstrap_sensors(client, runtime)
             log("PUBLISH - Bootstrap sensors published")
 
             time.sleep(60)
