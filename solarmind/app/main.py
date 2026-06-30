@@ -86,8 +86,8 @@ def publish_sensor(client, object_id, name, state, icon=None, unit=None, attribu
     client.publish(attributes_topic, json.dumps(attributes or {}), retain=True)
 
 
-def publish_bootstrap_sensors(client, errors):
-    health = 100 if not errors else 50
+def publish_bootstrap_sensors(client, runtime):
+    runtime.system.health = 100 if not runtime.system.errors else 50
 
     publish_sensor(
         client,
@@ -105,12 +105,12 @@ def publish_bootstrap_sensors(client, errors):
         client,
         "system_health",
         "System Health",
-        health,
+        runtime.system.health,
         icon="mdi:heart-pulse",
         unit="%",
         attributes={
             "version": VERSION,
-            "errors": errors,
+            "errors": runtime.system.errors,
         },
     )
 
@@ -118,11 +118,11 @@ def publish_bootstrap_sensors(client, errors):
         client,
         "system_errors",
         "System Errors",
-        len(errors),
+        len(runtime.system.errors),
         icon="mdi:alert-circle-outline",
         attributes={
             "version": VERSION,
-            "errors": errors,
+            "errors": runtime.system.errors,
         },
     )
 
