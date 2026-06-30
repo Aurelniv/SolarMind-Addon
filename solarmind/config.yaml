@@ -1,0 +1,26 @@
+name: SolarMind
+version: "0.1.0"
+slug: solarmind
+description: SolarMind photovoltaic analysis engine
+url: "https://github.com/yourname/solarmind"
+arch:
+  - amd64
+  - aarch64
+  - armv7
+startup: services
+boot: auto
+init: false
+host_network: false
+homeassistant_api: true
+hassio_api: true
+mqtt: true
+options:
+  mqtt_host: core-mosquitto
+  mqtt_port: 1883
+  mqtt_username: "ha-mqtt"
+  mqtt_password: "9jjiVawEV5ZjvV8"
+schema:
+  mqtt_host: str
+  mqtt_port: int
+  mqtt_username: str
+  mqtt_password: password
