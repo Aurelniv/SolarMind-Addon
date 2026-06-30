@@ -7,7 +7,7 @@ import paho.mqtt.client as mqtt
 import requests
 
 from config import load_config
-
+from runtime import Runtime
 
 VERSION = "1.0.1-beta"
 HA_TEST_ENTITY = "sensor.sun_solar_azimuth"
@@ -153,6 +153,8 @@ def main():
         log("BOOT - SolarMind add-on starting")
         log(f"VERSION - {VERSION}")
 
+        runtime = Runtime()
+
         config = load_config()
 
         mqtt_host = config.mqtt_host
@@ -177,15 +179,15 @@ def main():
         log("READY - SolarMind add-on started")
 
         while True:
-            errors = []
+            runtime.system.errors = []
 
             try:
                 publish_ha_test_value(client)
             except Exception as error:
-                errors.append(f"HA API test failed: {error}")
+                runtime.system.errors.append(f"HA API test failed: {error}")
                 log(f"ERROR - HA API test failed: {error}")
 
-            publish_bootstrap_sensors(client, errors)
+            publish_bootstrap_sensors(client, runtime.system.errors)
             log("PUBLISH - Bootstrap sensors published")
 
             time.sleep(60)
