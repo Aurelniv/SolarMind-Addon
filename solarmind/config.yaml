@@ -1,5 +1,5 @@
 name: SolarMind
-version: "0.1.1"
+version: "0.2.0"
 slug: solarmind
 description: SolarMind photovoltaic analysis engine
 url: "https://github.com/Aurelniv/SolarMind-Addon"
@@ -7,26 +7,17 @@ arch:
   - amd64
   - aarch64
   - armv7
-
-build_from:
-  amd64: ghcr.io/home-assistant/amd64-base:3.21
-  aarch64: ghcr.io/home-assistant/aarch64-base:3.21
-  armv7: ghcr.io/home-assistant/armv7-base:3.21
-
 startup: services
 boot: auto
 init: false
-host_network: false
 homeassistant_api: true
 hassio_api: true
 mqtt: true
-
 options:
   mqtt_host: core-mosquitto
   mqtt_port: 1883
   mqtt_username: "ha-mqtt"
   mqtt_password: "9jjiVawEV5ZjvV8"
-
 schema:
   mqtt_host: str
   mqtt_port: int
