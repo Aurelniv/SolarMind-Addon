@@ -174,8 +174,9 @@ def publish_sun_elevation(client, runtime):
         },
     )
 
-    log(f"PUBLISH - Sun elevation published: {runtime.sun.elevation}")
-    publish_sun_elevation(client, runtime)
+    log(f"PUBLISH - Sun elevation published: {runtime.sun.elevation}"
+    publish_sun_elevation(client, runtime))
+    
 
 
 def main():
