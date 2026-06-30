@@ -1,4 +1,3 @@
-from http import client
 import json
 import os
 import time
@@ -11,23 +10,12 @@ from config import load_config
 from runtime import Runtime
 
 VERSION = "1.0.3-beta"
-HA_TEST_ENTITY = "sensor.sun_solar_azimuth"
+HA_SUN_AZIMUTH_ENTITY = "sensor.sun_solar_azimuth"
 HA_SUN_ELEVATION_ENTITY = "sensor.sun_solar_elevation"
 
 
 def log(message):
     print(f"[SolarMind] {message}", flush=True)
-
-
-def load_options():
-    path = "/data/options.json"
-
-    if not os.path.exists(path):
-        log("WARNING - /data/options.json not found, using defaults")
-        return {}
-
-    with open(path, "r", encoding="utf-8") as file:
-        return json.load(file)
 
 
 def get_ha_token():
@@ -129,8 +117,8 @@ def publish_bootstrap_sensors(client, runtime):
     )
 
 
-def publish_ha_test_value(client, runtime):
-    ha_data = read_ha_state(HA_TEST_ENTITY)
+def publish_sun_azimuth(client, runtime):
+    ha_data = read_ha_state(HA_SUN_AZIMUTH_ENTITY)
     value = ha_data.get("state", "unknown")
 
     try:
@@ -140,18 +128,19 @@ def publish_ha_test_value(client, runtime):
 
     publish_sensor(
         client,
-        "ha_test_value",
-        "HA Test Value",
-        value,
-        icon="mdi:home-assistant",
+        "sun_azimuth",
+        "Sun Azimuth",
+        runtime.sun.azimuth,
+        icon="mdi:compass",
+        unit="°",
         attributes={
             "version": VERSION,
-            "source_entity": HA_TEST_ENTITY,
-            "ha_attributes": ha_data.get("attributes", {}),
+            "source_entity": HA_SUN_AZIMUTH_ENTITY,
         },
     )
 
-    log(f"HA API - {HA_TEST_ENTITY}={value}")
+    log(f"PUBLISH - Sun azimuth published: {runtime.sun.azimuth}")
+
 
 def publish_sun_elevation(client, runtime):
     ha_data = read_ha_state(HA_SUN_ELEVATION_ENTITY)
@@ -172,13 +161,10 @@ def publish_sun_elevation(client, runtime):
         attributes={
             "version": VERSION,
             "source_entity": HA_SUN_ELEVATION_ENTITY,
-            "ha_attributes": ha_data.get("attributes", {}),
         },
     )
 
     log(f"PUBLISH - Sun elevation published: {runtime.sun.elevation}")
-    publish_sun_elevation(client, runtime)
-    
 
 
 def main():
@@ -187,24 +173,18 @@ def main():
         log(f"VERSION - {VERSION}")
 
         runtime = Runtime()
-
         config = load_config()
-
-        mqtt_host = config.mqtt_host
-        mqtt_port = config.mqtt_port
-        mqtt_username = config.mqtt_username
-        mqtt_password = config.mqtt_password
 
         client = mqtt.Client(
             mqtt.CallbackAPIVersion.VERSION2,
             client_id="solarmind_addon",
         )
 
-        if mqtt_username:
-            client.username_pw_set(mqtt_username, mqtt_password)
+        if config.mqtt_username:
+            client.username_pw_set(config.mqtt_username, config.mqtt_password)
 
-        log(f"MQTT - Connecting to {mqtt_host}:{mqtt_port}")
-        client.connect(mqtt_host, mqtt_port, 60)
+        log(f"MQTT - Connecting to {config.mqtt_host}:{config.mqtt_port}")
+        client.connect(config.mqtt_host, config.mqtt_port, 60)
         client.loop_start()
         client.publish("solarmind/status/availability", "online", retain=True)
 
@@ -215,24 +195,11 @@ def main():
             runtime.system.errors = []
 
             try:
-                publish_ha_test_value(client, runtime)
-
-                publish_sensor(
-                    client,
-                    "sun_azimuth",
-                    "Sun Azimuth",
-                    runtime.sun.azimuth,
-                    icon="mdi:compass",
-                    unit="°",
-                    attributes={
-                        "version": VERSION,
-                        "source_entity": HA_TEST_ENTITY,
-                    },
-                )
-                log(f"PUBLISH - Sun azimuth published: {runtime.sun.azimuth}")
+                publish_sun_azimuth(client, runtime)
+                publish_sun_elevation(client, runtime)
             except Exception as error:
-                runtime.system.errors.append(f"HA API test failed: {error}")
-                log(f"ERROR - HA API test failed: {error}")
+                runtime.system.errors.append(f"Sun sensors failed: {error}")
+                log(f"ERROR - Sun sensors failed: {error}")
 
             publish_bootstrap_sensors(client, runtime)
             log("PUBLISH - Bootstrap sensors published")
