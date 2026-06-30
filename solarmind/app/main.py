@@ -201,6 +201,7 @@ def main():
                         "source_entity": HA_TEST_ENTITY,
                     },
                 )
+                log(f"PUBLISH - Sun azimuth published: {runtime.sun.azimuth}")
             except Exception as error:
                 runtime.system.errors.append(f"HA API test failed: {error}")
                 log(f"ERROR - HA API test failed: {error}")
