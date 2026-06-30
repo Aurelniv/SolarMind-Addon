@@ -172,6 +172,7 @@ def publish_sun_elevation(client, runtime):
         attributes={
             "version": VERSION,
             "source_entity": HA_SUN_ELEVATION_ENTITY,
+            "ha_attributes": ha_data.get("attributes", {}),
         },
     )
 
