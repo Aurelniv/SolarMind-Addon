@@ -127,10 +127,15 @@ def publish_bootstrap_sensors(client, runtime):
     )
 
 
-def publish_ha_test_value(client):
+def publish_ha_test_value(client, runtime):
     ha_data = read_ha_state(HA_TEST_ENTITY)
 
     value = ha_data.get("state", "unknown")
+
+    try:
+        runtime.sun.azimuth = float(value)
+    except Exception:
+        runtime.sun.azimuth = 0.0
 
     publish_sensor(
         client,
@@ -182,7 +187,7 @@ def main():
             runtime.system.errors = []
 
             try:
-                publish_ha_test_value(client)
+                publish_ha_test_value(client, runtime)
             except Exception as error:
                 runtime.system.errors.append(f"HA API test failed: {error}")
                 log(f"ERROR - HA API test failed: {error}")
