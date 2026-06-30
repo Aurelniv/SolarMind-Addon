@@ -9,7 +9,7 @@ import requests
 from config import load_config
 from runtime import Runtime
 
-VERSION = "1.0.1-beta"
+VERSION = "1.0.2-beta"
 HA_TEST_ENTITY = "sensor.sun_solar_azimuth"
 
 
