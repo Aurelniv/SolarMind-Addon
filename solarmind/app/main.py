@@ -1,3 +1,4 @@
+from http import client
 import json
 import os
 import time
@@ -174,8 +175,8 @@ def publish_sun_elevation(client, runtime):
         },
     )
 
-    log(f"PUBLISH - Sun elevation published: {runtime.sun.elevation}"
-    publish_sun_elevation(client, runtime))
+    log(f"PUBLISH - Sun elevation published: {runtime.sun.elevation}")
+    publish_sun_elevation(client, runtime)
     
 
 
