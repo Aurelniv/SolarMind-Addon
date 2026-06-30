@@ -9,8 +9,9 @@ import requests
 from config import load_config
 from runtime import Runtime
 
-VERSION = "1.0.2-beta"
+VERSION = "1.0.3-beta"
 HA_TEST_ENTITY = "sensor.sun_solar_azimuth"
+HA_SUN_ELEVATION_ENTITY = "sensor.sun_solar_elevation"
 
 
 def log(message):
@@ -129,7 +130,6 @@ def publish_bootstrap_sensors(client, runtime):
 
 def publish_ha_test_value(client, runtime):
     ha_data = read_ha_state(HA_TEST_ENTITY)
-
     value = ha_data.get("state", "unknown")
 
     try:
@@ -151,6 +151,31 @@ def publish_ha_test_value(client, runtime):
     )
 
     log(f"HA API - {HA_TEST_ENTITY}={value}")
+
+def publish_sun_elevation(client, runtime):
+    ha_data = read_ha_state(HA_SUN_ELEVATION_ENTITY)
+    value = ha_data.get("state", "unknown")
+
+    try:
+        runtime.sun.elevation = float(value)
+    except Exception:
+        runtime.sun.elevation = 0.0
+
+    publish_sensor(
+        client,
+        "sun_elevation",
+        "Sun Elevation",
+        runtime.sun.elevation,
+        icon="mdi:weather-sunny",
+        unit="°",
+        attributes={
+            "version": VERSION,
+            "source_entity": HA_SUN_ELEVATION_ENTITY,
+        },
+    )
+
+    log(f"PUBLISH - Sun elevation published: {runtime.sun.elevation}")
+    publish_sun_elevation(client, runtime)
 
 
 def main():
