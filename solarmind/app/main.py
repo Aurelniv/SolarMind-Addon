@@ -4,7 +4,7 @@ import time
 import traceback
 import paho.mqtt.client as mqtt
 
-VERSION = "0.2.1"
+VERSION = "1.0.0-beta"
 
 
 def log(message):
