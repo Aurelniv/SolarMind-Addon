@@ -7,9 +7,11 @@ import paho.mqtt.client as mqtt
 import requests
 
 from config import load_config
+from engines.physics import calculate_physics
+
 from runtime import Runtime
 
-VERSION = "1.0.3-beta"
+VERSION = "1.0.4-beta"
 HA_SUN_AZIMUTH_ENTITY = "sensor.sun_solar_azimuth"
 HA_SUN_ELEVATION_ENTITY = "sensor.sun_solar_elevation"
 
@@ -197,6 +199,55 @@ def main():
             try:
                 publish_sun_azimuth(client, runtime)
                 publish_sun_elevation(client, runtime)
+                calculate_physics(runtime)
+
+                publish_sensor(
+                    client,
+                    "pv_theoretical_power",
+                    "PV Theoretical Power",
+                    runtime.pv.theoretical_power,
+                    icon="mdi:solar-power-variant",
+                    unit="W",
+                    attributes={
+                        "version": VERSION,
+                        "installed_power_wc": runtime.pv.installed_power_wc,
+                        "panel_azimuth": runtime.pv.panel_azimuth,
+                        "panel_tilt": runtime.pv.panel_tilt,
+                    },
+                )
+
+                
+
+                publish_sensor(
+                    client,
+                    "panel_exposure",
+                    runtime.pv.panel_exposure,
+                    icon="mdi:white-balance-sunny",
+                    unit="%",
+                    attributes={
+                        "version": VERSION,
+                        "incidence_factor": runtime.pv.incidence_factor,
+                     },
+                 )
+
+                publish_sensor(
+                    client,
+                    "incidence_factor",
+                    "Incidence Factor",
+                    runtime.pv.incidence_factor,
+                    icon="mdi:angle-acute",
+                    attributes={
+                        "version": VERSION,
+                     },
+                 )
+
+                log(
+                    f"PUBLISH - Physics published: "
+                    f"theoretical={runtime.pv.theoretical_power}W "
+                    f"exposure={runtime.pv.panel_exposure}% "
+                    f"incidence={runtime.pv.incidence_factor}"
+)
+
             except Exception as error:
                 runtime.system.errors.append(f"Sun sensors failed: {error}")
                 log(f"ERROR - Sun sensors failed: {error}")
