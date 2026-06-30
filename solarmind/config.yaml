@@ -24,8 +24,8 @@ mqtt: true
 options:
   mqtt_host: core-mosquitto
   mqtt_port: 1883
-  mqtt_username: ""
-  mqtt_password: ""
+  mqtt_username: "ha-mqtt"
+  mqtt_password: "9jjiVawEV5ZjvV8"
 
 schema:
   mqtt_host: str
