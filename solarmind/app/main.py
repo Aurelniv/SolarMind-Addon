@@ -23,26 +23,26 @@ def load_options():
     with open(path, "r", encoding="utf-8") as file:
         options = json.load(file)
 
-    log(f"STEP 1 OK - Options loaded: {options}")
+    log(f"STEP 1 OK - Options loaded")
     return options
 
 
-def publish_status(client):
-    log("STEP 5 - Publishing MQTT discovery and state")
-
-    discovery_topic = "homeassistant/sensor/solarmind/status/config"
-    state_topic = "solarmind/status/state"
+def publish_sensor(client, object_id, name, state, icon=None, unit=None, attributes=None):
+    base_topic = f"solarmind/{object_id}"
+    discovery_topic = f"homeassistant/sensor/solarmind/{object_id}/config"
+    state_topic = f"{base_topic}/state"
+    attributes_topic = f"{base_topic}/attributes"
     availability_topic = "solarmind/status/availability"
 
-    discovery_payload = {
-        "name": "Status",
-        "object_id": "solarmind_status",
-        "unique_id": "solarmind_status",
+    payload = {
+        "name": name,
+        "object_id": f"solarmind_{object_id}",
+        "unique_id": f"solarmind_{object_id}",
         "state_topic": state_topic,
+        "json_attributes_topic": attributes_topic,
         "availability_topic": availability_topic,
         "payload_available": "online",
         "payload_not_available": "offline",
-        "icon": "mdi:solar-power-variant",
         "device": {
             "identifiers": ["solarmind"],
             "name": "SolarMind",
@@ -52,14 +52,57 @@ def publish_status(client):
         },
     }
 
-    result_discovery = client.publish(discovery_topic, json.dumps(discovery_payload), retain=True)
-    result_availability = client.publish(availability_topic, "online", retain=True)
-    result_state = client.publish(state_topic, "online", retain=True)
+    if icon:
+        payload["icon"] = icon
 
-    log(f"MQTT publish discovery rc={result_discovery.rc}")
-    log(f"MQTT publish availability rc={result_availability.rc}")
-    log(f"MQTT publish state rc={result_state.rc}")
-    log("STEP 5 OK - MQTT messages published")
+    if unit:
+        payload["unit_of_measurement"] = unit
+
+    client.publish(discovery_topic, json.dumps(payload), retain=True)
+    client.publish(state_topic, str(state), retain=True)
+    client.publish(attributes_topic, json.dumps(attributes or {}), retain=True)
+
+
+def publish_bootstrap_sensors(client):
+    errors = []
+    health = 100 if not errors else 50
+
+    publish_sensor(
+        client,
+        "status",
+        "Status",
+        "online",
+        icon="mdi:solar-power-variant",
+        attributes={
+            "version": VERSION,
+            "source": "SolarMind",
+        },
+    )
+
+    publish_sensor(
+        client,
+        "system_health",
+        "System Health",
+        health,
+        icon="mdi:heart-pulse",
+        unit="%",
+        attributes={
+            "version": VERSION,
+            "errors": errors,
+        },
+    )
+
+    publish_sensor(
+        client,
+        "system_errors",
+        "System Errors",
+        len(errors),
+        icon="mdi:alert-circle-outline",
+        attributes={
+            "version": VERSION,
+            "errors": errors,
+        },
+    )
 
 
 def main():
@@ -94,12 +137,16 @@ def main():
         client.loop_start()
         log("STEP 4 OK - MQTT connected")
 
-        publish_status(client)
+        client.publish("solarmind/status/availability", "online", retain=True)
+
+        publish_bootstrap_sensors(client)
+        log("PUBLISH - Bootstrap sensors published")
 
         log("READY - SolarMind add-on started")
 
         while True:
-            publish_status(client)
+            publish_bootstrap_sensors(client)
+            log("PUBLISH - Bootstrap sensors published")
             time.sleep(60)
 
     except Exception as error:
